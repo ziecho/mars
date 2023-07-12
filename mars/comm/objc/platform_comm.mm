@@ -23,10 +23,10 @@
 #include "comm/xlogger/loginfo_extract.h"
 #import "comm/objc/scope_autoreleasepool.h"
 
-#define TARGET_OS_WATCH 1
+#define PURE_XLOG 1
 
 
-#if TARGET_OS_WATCH
+#if PURE_XLOG
 typedef enum {
     NotReachable = 0,
     ReachableViaWiFi,
@@ -35,12 +35,12 @@ typedef enum {
 #endif
 
 #import <TargetConditionals.h>
-#if !TARGET_OS_WATCH
+#if !PURE_XLOG
 #import <SystemConfiguration/CaptiveNetwork.h>
 #import <CFNetwork/CFProxySupport.h>
 #endif
 
-#if TARGET_OS_IPHONE && !TARGET_OS_WATCH
+#if TARGET_OS_IPHONE && !PURE_XLOG
 #import <UIKit/UIApplication.h>
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #import <CoreTelephony/CTCarrier.h>
@@ -80,7 +80,7 @@ static float __GetSystemVersion() {
 
 static MarsNetworkStatus __GetNetworkStatus()
 {
-#if TARGET_OS_WATCH
+#if PURE_XLOG
     return ReachableViaWiFi;
 #else
     return [MarsReachability getCacheReachabilityStatus:NO];
@@ -107,7 +107,7 @@ void ResetWiFiIdCallBack() {
 
 
 void FlushReachability() {
-#if !TARGET_OS_WATCH
+#if !PURE_XLOG
     [MarsReachability getCacheReachabilityStatus:YES];
     mars::comm::ScopedLock lock(sg_wifiinfo_mutex);
     sg_wifiinfo.ssid.clear();
@@ -131,7 +131,7 @@ bool getProxyInfo(int& port, std::string& strProxy, const std::string& _host)
 {
     xverbose_function();
     
-#if TARGET_OS_WATCH
+#if PURE_XLOG
     return false;
     
 #else
@@ -199,7 +199,7 @@ int getNetInfo() {
     xverbose_function();
     SCOPE_POOL();
     
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_WATCH
+#if TARGET_IPHONE_SIMULATOR || PURE_XLOG
     return mars::comm::kWifi;
 #else
 
@@ -253,7 +253,7 @@ unsigned int getSignal(bool isWifi){
 bool isNetworkConnected()
 {
    SCOPE_POOL(); 
-#if  TARGET_OS_WATCH
+#if  PURE_XLOG
     return true;
 #else
     switch (__GetNetworkStatus())
@@ -328,7 +328,7 @@ bool getCurWifiInfo(mars::comm::WifiInfo& wifiInfo, bool _force_refresh)
     }
     return true;
     
-#elif TARGET_OS_WATCH
+#elif PURE_XLOG
     wifiInfo.ssid = IWATCH_NET_INFO;
     wifiInfo.bssid = IWATCH_NET_INFO;
     return true;
@@ -431,7 +431,7 @@ bool getCurWifiInfo(mars::comm::WifiInfo& wifiInfo, bool _force_refresh)
 #endif
 }
 
-#if TARGET_OS_IPHONE && !TARGET_OS_WATCH
+#if TARGET_OS_IPHONE && !PURE_XLOG
 bool getCurSIMInfo(mars::comm::SIMInfo& simInfo)
 {
     NO_DESTROY static mars::comm::Mutex mutex;
@@ -507,7 +507,7 @@ NSLog(@"Current Radio Access Technology: %@", telephonyInfo.currentRadioAccessTe
 }];
 **/
 
-#if TARGET_OS_IPHONE && !TARGET_OS_WATCH
+#if TARGET_OS_IPHONE && !PURE_XLOG
 bool getCurRadioAccessNetworkInfo(mars::comm::RadioAccessNetworkInfo& _raninfo)
 {
     if (publiccomponent_GetSystemVersion() < 7.0){
