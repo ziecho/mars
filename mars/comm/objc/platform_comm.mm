@@ -23,6 +23,17 @@
 #include "comm/xlogger/loginfo_extract.h"
 #import "comm/objc/scope_autoreleasepool.h"
 
+#define TARGET_OS_WATCH 1
+
+
+#if TARGET_OS_WATCH
+typedef enum {
+    NotReachable = 0,
+    ReachableViaWiFi,
+    ReachableViaWWAN
+} MarsNetworkStatus;
+#endif
+
 #import <TargetConditionals.h>
 #if !TARGET_OS_WATCH
 #import <SystemConfiguration/CaptiveNetwork.h>
@@ -45,7 +56,7 @@
 #include <functional>
 
 #include "comm/objc/objc_timer.h"
-#import "comm/objc/Reachability.h"
+//#import "comm/objc/Reachability.h"
 
 #include "comm/thread/mutex.h"
 #include "comm/thread/lock.h"
@@ -190,7 +201,7 @@ int getNetInfo() {
     
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_WATCH
     return mars::comm::kWifi;
-#endif
+#else
 
     switch (__GetNetworkStatus())
     {
@@ -203,6 +214,7 @@ int getNetInfo() {
         default:
             return mars::comm::kNoNet;
     }
+    #endif
 }
 
 int getNetTypeForStatistics(){
@@ -241,6 +253,9 @@ unsigned int getSignal(bool isWifi){
 bool isNetworkConnected()
 {
    SCOPE_POOL(); 
+#if  TARGET_OS_WATCH
+    return true;
+#else
     switch (__GetNetworkStatus())
     {
         case NotReachable:
@@ -252,6 +267,7 @@ bool isNetworkConnected()
         default:
             return false;
     }
+    #endif
 }
 
 #define SIMULATOR_NET_INFO "SIMULATOR"
